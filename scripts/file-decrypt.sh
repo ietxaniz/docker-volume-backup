@@ -1,13 +1,17 @@
 #!/bin/bash
 
-if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <input_file> <output_file> <password>"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <input_encrypted_file> <output_decrypted_file>"
     exit 1
 fi
 
 INPUT_FILE=$1
 OUTPUT_FILE=$2
-PASSWORD=$3
+
+echo -n "Enter decryption password: "
+read -s PASSWORD
+echo
+
 METADATA_FILE="${INPUT_FILE}.metadata"
 
 if [ ! -f "$METADATA_FILE" ]; then

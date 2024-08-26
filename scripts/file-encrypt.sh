@@ -1,13 +1,16 @@
 #!/bin/bash
 
-if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <input_file> <output_file> <password>"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <input_file> <output_file>"
     exit 1
 fi
 
 INPUT_FILE=$1
 OUTPUT_FILE=$2
-PASSWORD=$3
+
+echo -n "Enter encryption password: "
+read -s PASSWORD
+echo
 
 # Generate salt and derive key
 KEY_INFO=$(./derive-key.sh "$PASSWORD")
@@ -27,4 +30,3 @@ echo "Iterations: $ITERATIONS" >> "${OUTPUT_FILE}.metadata"
 echo "IV: $IV" >> "${OUTPUT_FILE}.metadata"
 
 echo "File encrypted successfully."
-echo "Metadata and IV stored in ${OUTPUT_FILE}.metadata"
