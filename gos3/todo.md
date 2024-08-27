@@ -2,7 +2,7 @@
 
 - [x] List s3 content
 - [x] Call to any of scripts folder script (using exec package)
-- [ ] Upload data to s3
+- [x] Upload data to s3
 - [ ] Service
     - [ ] Automatic backups at certain hours of day
         - [ ] Configuration file with containers and associated volumes

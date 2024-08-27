@@ -8,20 +8,31 @@ import (
 )
 
 type S3Config struct {
-	Endpoint        string `json:"endpoint" yaml:"endpoint"`
-	Bucket          string `json:"bucket" yaml:"bucket"`
-	AccessKeyID     string `json:"accessKeyId" yaml:"accessKeyId"`
-	AccessKeySecret string `json:"accessKeySecret" yaml:"accessKeySecret"`
-	Region          string `json:"region" yaml:"region"`
+	Endpoint        string `yaml:"endpoint"`
+	Bucket          string `yaml:"bucket"`
+	AccessKeyID     string `yaml:"accessKeyId"`
+	AccessKeySecret string `yaml:"accessKeySecret"`
+	Region          string `yaml:"region"`
+	MaxFileSize     string `yaml:"maxFileSize"`
+	BackupFolder    string `yaml:"backupFolder"`
 }
 
 type AppConfig struct {
-	ScriptsFolder string `json:"scriptsFolder" yaml:"scriptsFolder"`
+	ScriptsFolder     string `yaml:"scriptsFolder"`
+	LocalBackupFolder string `yaml:"localBackupFolder"`
+	BackupFrequency   string `yaml:"backupFrequency"`
+}
+
+type VolumeConfig struct {
+	Name       string `yaml:"name"`
+	BackupName string `yaml:"backupName"`
+	Compress   bool   `yaml:"compress"`
 }
 
 type Config struct {
-	S3  S3Config  `json:"s3" yaml:"s3"`
-	App AppConfig `json:"app" yaml:"app"`
+	S3      S3Config       `yaml:"s3"`
+	App     AppConfig      `yaml:"app"`
+	Volumes []VolumeConfig `yaml:"volumes"`
 }
 
 func LoadConfiguration(configFileName string) (Config, error) {

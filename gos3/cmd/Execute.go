@@ -36,8 +36,12 @@ func init() {
 	rootCmd.AddCommand(keyDecrypt2Cmd)
 	rootCmd.AddCommand(splitCmd)
 	rootCmd.AddCommand(joinCmd)
+	rootCmd.AddCommand(s3UploadCmd)
 
 	volumebackupCmd.Flags().BoolP("no-compression", "n", false, "Create backup without compression")
+
+	s3UploadCmd.Flags().String("local", "", "Override the local folder path from config")
+	s3UploadCmd.Flags().String("s3folder", "", "Override the S3 folder path from config")
 
 	addListFlags(listCmd)
 	addKeyFlags(derivekeyCmd)
