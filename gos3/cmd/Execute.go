@@ -18,8 +18,15 @@ func addListFlags(cmd *cobra.Command) {
 	cmd.Flags().String("delimiter", "", "List delimiter. '' for recursive '/' for local items only")
 }
 
+func addKeyFlags(cmd *cobra.Command) {
+	cmd.Flags().String("salt", "", "Salt for key generation")
+	cmd.Flags().Int("iterations", 0, "Iterations for key generation")
+}
+
 func init() {
 	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(derivekeyCmd)
 
 	addListFlags(listCmd)
+	addKeyFlags(derivekeyCmd)
 }

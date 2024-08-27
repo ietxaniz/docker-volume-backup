@@ -20,6 +20,11 @@ start_time=$(date +%s.%N)
 # Use the provided salt in the key derivation
 KEY=$(printf "%s" "$PASSWORD" | openssl enc -aes-256-cbc -pbkdf2 -iter $ITERATIONS -S "$SALT" -pass stdin -P 2>/dev/null | grep "key=" | cut -d'=' -f2)
 
+if [ -z "$KEY" ]; then
+    echo "Error: Failed to derive key" >&2
+    exit 1
+fi
+
 end_time=$(date +%s.%N)
 duration=$(echo "$end_time - $start_time" | bc)
 

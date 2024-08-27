@@ -15,8 +15,13 @@ type S3Config struct {
 	Region          string `json:"region" yaml:"region"`
 }
 
+type AppConfig struct {
+	ScriptsFolder string `json:"scriptsFolder" yaml:"scriptsFolder"`
+}
+
 type Config struct {
-	S3 S3Config `json:"s3" yaml:"s3"`
+	S3  S3Config  `json:"s3" yaml:"s3"`
+	App AppConfig `json:"app" yaml:"app"`
 }
 
 func LoadConfiguration(configFileName string) (Config, error) {
