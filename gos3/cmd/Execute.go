@@ -26,6 +26,10 @@ func addKeyFlags(cmd *cobra.Command) {
 func init() {
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(derivekeyCmd)
+	rootCmd.AddCommand(volumebackupCmd)
+	rootCmd.AddCommand(volumerestoreCmd)
+
+	volumebackupCmd.Flags().BoolP("no-compression", "n", false, "Create backup without compression")
 
 	addListFlags(listCmd)
 	addKeyFlags(derivekeyCmd)
