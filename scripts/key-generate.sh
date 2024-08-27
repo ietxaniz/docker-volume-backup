@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Generate ECC key pair
-openssl ecparam -name prime256v1 -genkey -noout -out private_key.pem
-openssl ec -in private_key.pem -pubout -out public_key.pem
+# Generate 16384-bit RSA key pair
+openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:16384
+openssl rsa -pubout -in private_key.pem -out public_key.pem
 
-echo "ECC key pair generated:"
+echo "16384-bit RSA key pair generated:"
 echo "Private key: private_key.pem"
 echo "Public key: public_key.pem"
 

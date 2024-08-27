@@ -24,8 +24,8 @@ fi
 # Generate a random password
 RANDOM_PASS=$(openssl rand -base64 32)
 
-# Encrypt the file with the random password
-openssl enc -aes-256-cbc -salt -in "$INPUT_FILE" -out "$OUTPUT_FILE" -k "$RANDOM_PASS"
+# Encrypt the file with the random password using PBKDF2 for key derivation
+openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -in "$INPUT_FILE" -out "$OUTPUT_FILE" -k "$RANDOM_PASS"
 
 # Encrypt the random password with the public key
 echo "$RANDOM_PASS" | openssl pkeyutl -encrypt -pubin -inkey "$PUBLIC_KEY" -out "${OUTPUT_FILE}.pass"
