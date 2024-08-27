@@ -1,7 +1,7 @@
 ## Functionalities to implement
 
 - [x] List s3 content
-- [ ] Call to any of scripts folder script (using exec package)
+- [x] Call to any of scripts folder script (using exec package)
 - [ ] Upload data to s3
 - [ ] Service
     - [ ] Automatic backups at certain hours of day
