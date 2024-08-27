@@ -1,0 +1,22 @@
+## Functionalities to implement
+
+- [x] List s3 content
+- [ ] Call to any of scripts folder script (using exec package)
+- [ ] Upload data to s3
+- [ ] Service
+    - [ ] Automatic backups at certain hours of day
+        - [ ] Configuration file with containers and associated volumes
+        - [ ] Stops container
+        - [ ] Makes a copy of the data: volume-backup.sh
+        - [ ] Starts container
+        - [ ] Encripts all generated data
+        - [ ] Generates a folder with combination of date and backup name on s3
+        - [ ] Uploads all encrypted data
+    - [ ] Delete old redundant backups. Maintaining a predefined patter (for example first of last 6 months, first of last 4 weeks and last 5 days)
+- [ ] Add a logging sytem to track backup operations, errors, and performance metrics.
+- [ ] Implement alerts. For backup failures, etc...
+- [ ] Develop a centralized system that can aggregate logs and status reports from all ownsers instances using this service.
+- [ ] Backup verification. Add backup verification functionality.
+- [ ] Retry mechanism. Implement a retry system for failed backups or uploads.
+- [ ] Resource management. Add checks to ensure sufficient disk space before starting backups.
+- [ ] Restore testing. Periodically test restore process to ensure backups are valid and restorable. (Perhaps this needs to be manual as private key is stored with a secret)

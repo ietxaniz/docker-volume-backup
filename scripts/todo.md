@@ -1,0 +1,3 @@
+- [ ] Create specific backup and restoration scripts for dockerized postgresql instances without the need of stopping the database container
+    - [ ] use pgdump for a script similar to volume-backup.sh (include postgresql version as metadata)
+    - [ ] use pgrestore for a script similar to volume-restore.sh
