@@ -30,6 +30,10 @@ func init() {
 	rootCmd.AddCommand(volumerestoreCmd)
 	rootCmd.AddCommand(fileEncryptCmd)
 	rootCmd.AddCommand(fileDecryptCmd)
+	rootCmd.AddCommand(keyGenerateCmd)
+	rootCmd.AddCommand(keyEncryptCmd)
+	rootCmd.AddCommand(keyDecryptCmd)
+	rootCmd.AddCommand(keyDecrypt2Cmd)
 
 	volumebackupCmd.Flags().BoolP("no-compression", "n", false, "Create backup without compression")
 
