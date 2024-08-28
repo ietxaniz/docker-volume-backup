@@ -38,7 +38,8 @@ func init() {
 	rootCmd.AddCommand(joinCmd)
 	rootCmd.AddCommand(s3UploadCmd)
 	rootCmd.AddCommand(manualBackupCmd)
-	
+	rootCmd.AddCommand(downloadCmd)
+
 	volumebackupCmd.Flags().BoolP("no-compression", "n", false, "Create backup without compression")
 
 	s3UploadCmd.Flags().String("local", "", "Override the local folder path from config")

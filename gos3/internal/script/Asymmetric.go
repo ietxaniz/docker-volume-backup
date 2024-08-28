@@ -2,6 +2,7 @@ package script
 
 import (
 	"fmt"
+	"log"
 	"os/exec"
 	"path/filepath"
 
@@ -66,6 +67,6 @@ func KeyDecrypt2(inputFile, outputFile, encryptedPrivateKeyFile string, privateK
 		return fmt.Errorf("error executing key-decrypt2.sh: %w\nOutput: %s", err, string(output))
 	}
 
-	fmt.Println(string(output))
+	log.Printf("KeyDecrypt2 output: %s", string(output))
 	return nil
 }

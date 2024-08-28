@@ -22,6 +22,8 @@ type AppConfig struct {
 	LocalBackupFolder string `yaml:"localBackupFolder"`
 	BackupFrequency   string `yaml:"backupFrequency"`
 	PublicKeyFile     string `yaml:"publicKeyFile"`
+	PrivateKeyFile    string `yaml:"privateKeyFile"`
+    PrivateKeyMetadata string `yaml:"privateKeyMetadata"`
 }
 
 type BackupDefinition struct {
