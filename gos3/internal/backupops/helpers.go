@@ -5,6 +5,7 @@ import (
 	"gos3/internal/config"
 	"gos3/internal/script"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"sync"
@@ -89,4 +90,10 @@ func encryptBackup(inputFile, outputFile string, cfg config.Config) error {
 func isVolumePath(volumeName string) bool {
 	// Check if the volume name is a file path
 	return filepath.IsAbs(volumeName)
+}
+
+func changeBackupPermissions(backupFilePath string, cfg config.Config) error {
+    cmd := exec.Command("docker", "run", "--rm", "-v", fmt.Sprintf("%s:/backup", filepath.Dir(backupFilePath)),
+        "alpine", "chown", "-R", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), "/backup")
+    return cmd.Run()
 }
