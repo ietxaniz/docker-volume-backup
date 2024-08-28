@@ -10,8 +10,8 @@
         - [x] Makes a copy of the data: volume-backup.sh
         - [x] Starts container
         - [x] Encripts all generated data
-        - [ ] Generates a folder with combination of date and backup name on s3
-        - [ ] Uploads all encrypted data
+        - [x] Generates a folder with combination of date and backup name on s3
+        - [x] Uploads all encrypted data
     - [ ] Delete old redundant backups. Maintaining a predefined patter (for example first of last 6 months, first of last 4 weeks and last 5 days)
 - [ ] Add a logging sytem to track backup operations, errors, and performance metrics.
 - [ ] Implement alerts. For backup failures, etc...
