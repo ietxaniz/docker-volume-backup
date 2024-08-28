@@ -11,28 +11,41 @@ import (
 )
 
 func PerformStandardBackup(def config.BackupDefinition, cfg config.Config) error {
+	log.Printf("Starting backup process for: %s", def.Name)
+	log.Printf("Stopping containers: %v", def.Containers)
 
 	err := stopContainers(def.Containers)
 	if err != nil {
 		return err
 	}
 	volumeCreationErrors := ""
+	log.Printf("Containers stopped successfully: %v", def.Containers)
 
 	for i, volumeName := range def.Volumes {
 		backupFileName := generateBackupFileName(def.Name, volumeName, i)
 		backupFilePath := filepath.Join(cfg.App.LocalBackupFolder, backupFileName)
+		log.Printf("Creating backup for volume: %s", volumeName)
 
 		_, err = script.VolumeBackup(volumeName, backupFilePath, true, cfg)
 		if err != nil {
 			volumeCreationErrors = err.Error()
+			log.Printf("Backup failed for volume: %s, %s", volumeName, err.Error())
 			break
+		}
+		log.Printf("Backup created successfully for volume: %s", volumeName)
+
+		err = changeBackupPermissions(backupFilePath, cfg)
+		if err != nil {
+			log.Printf("Warning: failed to change permissions for %s: %v", backupFilePath, err)
 		}
 	}
 
+	log.Printf("Starting containers: %v", def.Containers)
 	err = startContainers(def.Containers)
 	if err != nil {
 		return err
 	}
+	log.Printf("Containers started successfully: %v", def.Containers)
 
 	if len(volumeCreationErrors) != 0 {
 		return fmt.Errorf("error creating volumes: %s", volumeCreationErrors)
