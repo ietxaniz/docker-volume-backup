@@ -5,11 +5,11 @@
 - [x] Upload data to s3
 - [ ] Service
     - [ ] Automatic backups at certain hours of day
-        - [ ] Configuration file with containers and associated volumes
-        - [ ] Stops container
-        - [ ] Makes a copy of the data: volume-backup.sh
-        - [ ] Starts container
-        - [ ] Encripts all generated data
+        - [x] Configuration file with containers and associated volumes
+        - [x] Stops container
+        - [x] Makes a copy of the data: volume-backup.sh
+        - [x] Starts container
+        - [x] Encripts all generated data
         - [ ] Generates a folder with combination of date and backup name on s3
         - [ ] Uploads all encrypted data
     - [ ] Delete old redundant backups. Maintaining a predefined patter (for example first of last 6 months, first of last 4 weeks and last 5 days)

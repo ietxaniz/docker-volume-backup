@@ -21,6 +21,14 @@ type AppConfig struct {
 	ScriptsFolder     string `yaml:"scriptsFolder"`
 	LocalBackupFolder string `yaml:"localBackupFolder"`
 	BackupFrequency   string `yaml:"backupFrequency"`
+	PublicKeyFile     string `yaml:"publicKeyFile"`
+}
+
+type BackupDefinition struct {
+	Name       string   `yaml:"name"`
+	Type       string   `yaml:"type"`
+	Containers []string `yaml:"containers"`
+	Volumes    []string `yaml:"volumes"`
 }
 
 type VolumeConfig struct {
@@ -30,9 +38,10 @@ type VolumeConfig struct {
 }
 
 type Config struct {
-	S3      S3Config       `yaml:"s3"`
-	App     AppConfig      `yaml:"app"`
-	Volumes []VolumeConfig `yaml:"volumes"`
+	S3                S3Config           `yaml:"s3"`
+	App               AppConfig          `yaml:"app"`
+	Volumes           []VolumeConfig     `yaml:"volumes"`
+	BackupDefinitions []BackupDefinition `yaml:"backupDefinitions"`
 }
 
 func LoadConfiguration(configFileName string) (Config, error) {
