@@ -24,7 +24,6 @@ func uploadLargeFile(sess *session.Session, localPath, remotePath string, cfg co
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Use the script.Split function to split the file
 	err = script.Split(localPath, fmt.Sprintf("%d", maxSize), cfg)
 	if err != nil {
 		return fmt.Errorf("failed to split file: %w", err)

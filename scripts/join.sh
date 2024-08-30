@@ -3,7 +3,7 @@
 usage() {
     echo "Usage: $0 <folder_path>"
     echo "Example: $0 /path/to/backup/parts"
-    echo "Note: This script will join all sets of *.part-* files in the specified folder."
+    echo "Note: This script will join all sets of *.part-* files in the specified folder and its subfolders."
 }
 
 if [ "$#" -ne 1 ]; then
@@ -22,25 +22,24 @@ fi
 # Change to the specified directory
 cd "$FOLDER_PATH" || exit 1
 
-# Find all unique base names
-BASE_NAMES=$(ls *.part-* 2>/dev/null | sed 's/\.part-[0-9]\+$//' | sort -u)
+# Find all split folders
+SPLIT_FOLDERS=$(find . -type d -name "*-split_parts")
 
-if [ -z "$BASE_NAMES" ]; then
-    echo "Error: No part files found in the specified folder."
-    exit 1
-fi
-
-for BASE_NAME in $BASE_NAMES; do
-    echo "Processing $BASE_NAME..."
+for SPLIT_FOLDER in $SPLIT_FOLDERS; do
+    echo "Processing folder: $SPLIT_FOLDER"
     
-    PART_FILES=$(ls "${BASE_NAME}".part-* 2>/dev/null | sort -V)
+    # Extract the original file name
+    ORIGINAL_FILE=$(basename "$SPLIT_FOLDER" "-split_parts")
+    
+    # Find all part files
+    PART_FILES=$(find "$SPLIT_FOLDER" -name "${ORIGINAL_FILE}.part-*" | sort -V)
     
     if [ -z "$PART_FILES" ]; then
-        echo "Error: No part files found for $BASE_NAME."
+        echo "Error: No part files found in $SPLIT_FOLDER."
         continue
     fi
 
-    OUTPUT_FILE="$BASE_NAME"
+    OUTPUT_FILE="$ORIGINAL_FILE"
     
     echo "Joining parts to create: $OUTPUT_FILE"
 
@@ -53,16 +52,16 @@ for BASE_NAME in $BASE_NAMES; do
         
         # Verify the joined file exists and has a non-zero size
         if [ -s "$OUTPUT_FILE" ]; then
-            echo "Deleting part files..."
-            rm "${BASE_NAME}".part-*
-            echo "Part files deleted."
+            echo "Deleting split folder..."
+            rm -r "$SPLIT_FOLDER"
+            echo "Split folder deleted."
         else
-            echo "Error: Joined file is empty. Part files preserved."
+            echo "Error: Joined file is empty. Split folder preserved."
             rm "$OUTPUT_FILE"  # Remove the empty file
             continue
         fi
     else
-        echo "Error occurred during joining. Part files preserved."
+        echo "Error occurred during joining. Split folder preserved."
         continue
     fi
 

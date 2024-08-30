@@ -45,23 +45,29 @@ for file in *; do
     if [ $FILE_SIZE -gt $SPLIT_BYTES ]; then
         echo "Processing $file (size: $FILE_SIZE bytes)..."
         
+        # Create subfolder for split parts
+        SPLIT_FOLDER="${file}-split_parts"
+        mkdir -p "$SPLIT_FOLDER"
+        
         # Split the file
-        split -b $SPLIT_SIZE -d "$file" "${file}.part-"
+        split -b $SPLIT_SIZE -d --suffix-length=4 "$file" "${SPLIT_FOLDER}/${file}.part-"
         
         # Check if split was successful
         if [ $? -eq 0 ]; then
-            echo "$file split into parts of $SPLIT_SIZE bytes"
+            echo "$file split into parts of $SPLIT_SIZE bytes in $SPLIT_FOLDER"
             
             # Verify that at least one part file was created
-            if ls "${file}.part-"* > /dev/null 2>&1; then
+            if ls "${SPLIT_FOLDER}/${file}.part-"* > /dev/null 2>&1; then
                 # Delete the original file
                 rm "$file"
                 echo "Original file deleted"
             else
                 echo "Error: No part files created. Original file preserved."
+                rm -r "$SPLIT_FOLDER"
             fi
         else
             echo "Error occurred during file splitting. Original file preserved."
+            rm -r "$SPLIT_FOLDER"
         fi
         echo "------------------------"
     else
