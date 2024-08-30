@@ -12,9 +12,15 @@ import (
 
 func PerformStandardBackup(def config.BackupDefinition, cfg config.Config) error {
 	log.Printf("Starting backup process for: %s", def.Name)
+
+	err := cleanLocalBackupFolder(cfg.App.LocalBackupFolder)
+	if err != nil {
+		return fmt.Errorf("failed to clean local backup folder: %w", err)
+	}
+
 	log.Printf("Stopping containers: %v", def.Containers)
 
-	err := stopContainers(def.Containers)
+	err = stopContainers(def.Containers)
 	if err != nil {
 		return err
 	}
@@ -51,40 +57,63 @@ func PerformStandardBackup(def config.BackupDefinition, cfg config.Config) error
 		return fmt.Errorf("error creating volumes: %s", volumeCreationErrors)
 	}
 
-	for i, volumeName := range def.Volumes {
-		backupFileName := generateBackupFileName(def.Name, volumeName, i)
-		backupFilePath := filepath.Join(cfg.App.LocalBackupFolder, backupFileName)
+	err = encryptBackupFiles(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt backup files: %w", err)
+	}
 
-		encryptedFilePath := backupFilePath + ".cpt"
-		passFilePath := encryptedFilePath + ".pass"
+	err = script.Split(cfg.App.LocalBackupFolder, cfg.S3.MaxFileSize, cfg)
+	if err != nil {
+		return fmt.Errorf("failed to split backup files: %w", err)
+	}
 
-		err = encryptBackup(backupFilePath, encryptedFilePath, cfg)
-		if err != nil {
-			return fmt.Errorf("failed to encrypt backup for volume %s: %w", volumeName, err)
+	s3Subfolder := s3.GenerateSubfolderName(cfg.App.BackupFrequency)
+	s3Path := filepath.Join(cfg.S3.BackupFolder, s3Subfolder)
+
+	err = s3.UploadFolderToS3(cfg.App.LocalBackupFolder, s3Path, cfg)
+	if err != nil {
+		return fmt.Errorf("failed to upload backup to S3: %w", err)
+	}
+
+	err = cleanLocalBackupFolder(cfg.App.LocalBackupFolder)
+	if err != nil {
+		log.Printf("Warning: failed to clean local backup folder after upload: %v", err)
+	}
+
+	return nil
+}
+
+func cleanLocalBackupFolder(folderPath string) error {
+	err := os.RemoveAll(folderPath)
+	if err != nil {
+		return err
+	}
+
+	return os.MkdirAll(folderPath, 0755)
+}
+
+func encryptBackupFiles(cfg config.Config) error {
+	files, err := os.ReadDir(cfg.App.LocalBackupFolder)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
 		}
 
-		s3Subfolder := s3.GenerateSubfolderName(cfg.App.BackupFrequency)
+		filePath := filepath.Join(cfg.App.LocalBackupFolder, file.Name())
+		encryptedFilePath := filePath + ".cpt"
 
-		// Upload .cpt file
-		s3PathCpt := filepath.Join(cfg.S3.BackupFolder, s3Subfolder, backupFileName+".cpt")
-		err = s3.UploadToS3(encryptedFilePath, s3PathCpt, cfg)
+		err = script.KeyEncrypt(filePath, encryptedFilePath, cfg.App.PublicKeyFile, cfg)
 		if err != nil {
-			return fmt.Errorf("failed to upload encrypted backup for volume %s to S3: %w", volumeName, err)
+			return fmt.Errorf("failed to encrypt file %s: %w", filePath, err)
 		}
 
-		// Upload .pass file
-		s3PathPass := filepath.Join(cfg.S3.BackupFolder, s3Subfolder, backupFileName+".cpt.pass")
-		err = s3.UploadToS3(passFilePath, s3PathPass, cfg)
+		err = os.Remove(filePath)
 		if err != nil {
-			return fmt.Errorf("failed to upload pass file for volume %s to S3: %w", volumeName, err)
-		}
-
-		// Clean up local files
-		for _, filePath := range []string{backupFilePath, encryptedFilePath, passFilePath} {
-			err = os.Remove(filePath)
-			if err != nil {
-				log.Printf("Warning: failed to remove local file %s: %v", filePath, err)
-			}
+			log.Printf("Warning: failed to remove original file %s after encryption: %v", filePath, err)
 		}
 	}
 
