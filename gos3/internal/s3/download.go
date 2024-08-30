@@ -103,7 +103,8 @@ func DownloadBackup(cfg config.Config) error {
 	}
 
 	log.Println("All files downloaded. Joining split files...")
-	if err := joinSplitFiles(cfg.App.LocalBackupFolder); err != nil {
+	err = joinSplitFiles(cfg.App.LocalBackupFolder)
+	if err != nil {
 		return fmt.Errorf("failed to join split files: %w", err)
 	}
 
@@ -220,4 +221,60 @@ func createS3Session(cfg config.S3Config) (*session.Session, error) {
 		Endpoint:    aws.String(cfg.Endpoint),
 		Credentials: credentials.NewStaticCredentials(cfg.AccessKeyID, cfg.AccessKeySecret, ""),
 	})
+}
+
+func JoinSplitFiles(cfg config.Config) error {
+	backupFolder := cfg.App.LocalBackupFolder
+	log.Printf("Starting to join split files in directory: %s", backupFolder)
+
+	items, err := os.ReadDir(backupFolder)
+	if err != nil {
+		return fmt.Errorf("failed to read backup directory: %w", err)
+	}
+
+	for _, item := range items {
+		if item.IsDir() {
+			subfolderPath := filepath.Join(backupFolder, item.Name())
+			log.Printf("Processing subfolder: %s", subfolderPath)
+
+			err := joinFilesInSubfolder(cfg, subfolderPath)
+			if err != nil {
+				return fmt.Errorf("failed to process subfolder %s: %w", subfolderPath, err)
+			}
+		}
+	}
+
+	log.Println("All split files joined successfully")
+	return nil
+}
+
+func joinFilesInSubfolder(cfg config.Config, subfolderPath string) error {
+	err := script.Join(subfolderPath, cfg)
+	if err != nil {
+		return fmt.Errorf("failed to join files: %w", err)
+	}
+
+	joinedFiles, err := filepath.Glob(filepath.Join(subfolderPath, "*"))
+	if err != nil {
+		return fmt.Errorf("failed to list joined files: %w", err)
+	}
+
+	for _, joinedFile := range joinedFiles {
+		if filepath.Ext(joinedFile) != ".part" {
+			newPath := filepath.Join(filepath.Dir(subfolderPath), filepath.Base(joinedFile))
+			err = os.Rename(joinedFile, newPath)
+			if err != nil {
+				return fmt.Errorf("failed to move joined file %s: %w", joinedFile, err)
+			}
+			log.Printf("Moved joined file to: %s", newPath)
+		}
+	}
+
+	err = os.RemoveAll(subfolderPath)
+	if err != nil {
+		return fmt.Errorf("failed to remove processed subfolder %s: %w", subfolderPath, err)
+	}
+	log.Printf("Removed processed subfolder: %s", subfolderPath)
+
+	return nil
 }

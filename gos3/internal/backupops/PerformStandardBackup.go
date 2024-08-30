@@ -34,7 +34,7 @@ func PerformStandardBackup(def config.BackupDefinition, cfg config.Config) error
 		}
 		log.Printf("Backup created successfully for volume: %s", volumeName)
 
-		err = changeBackupPermissions(backupFilePath, cfg)
+		err = changeBackupPermissions(backupFilePath)
 		if err != nil {
 			log.Printf("Warning: failed to change permissions for %s: %v", backupFilePath, err)
 		}
@@ -67,14 +67,14 @@ func PerformStandardBackup(def config.BackupDefinition, cfg config.Config) error
 
 		// Upload .cpt file
 		s3PathCpt := filepath.Join(cfg.S3.BackupFolder, s3Subfolder, backupFileName+".cpt")
-		err = s3.UploadToS3(encryptedFilePath, s3PathCpt, cfg.S3)
+		err = s3.UploadToS3(encryptedFilePath, s3PathCpt, cfg)
 		if err != nil {
 			return fmt.Errorf("failed to upload encrypted backup for volume %s to S3: %w", volumeName, err)
 		}
 
 		// Upload .pass file
 		s3PathPass := filepath.Join(cfg.S3.BackupFolder, s3Subfolder, backupFileName+".cpt.pass")
-		err = s3.UploadToS3(passFilePath, s3PathPass, cfg.S3)
+		err = s3.UploadToS3(passFilePath, s3PathPass, cfg)
 		if err != nil {
 			return fmt.Errorf("failed to upload pass file for volume %s to S3: %w", volumeName, err)
 		}

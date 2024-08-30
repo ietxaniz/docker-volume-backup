@@ -23,7 +23,7 @@ fi
 cd "$FOLDER_PATH" || exit 1
 
 # Find all unique base names
-BASE_NAMES=$(ls *.part-* 2>/dev/null | sed 's/\.part-[0-9]*$//' | sort -u)
+BASE_NAMES=$(ls *.part-* 2>/dev/null | sed 's/\.part-[0-9]\+$//' | sort -u)
 
 if [ -z "$BASE_NAMES" ]; then
     echo "Error: No part files found in the specified folder."
@@ -33,7 +33,7 @@ fi
 for BASE_NAME in $BASE_NAMES; do
     echo "Processing $BASE_NAME..."
     
-    PART_FILES=$(ls "${BASE_NAME}".part-* 2>/dev/null | sort)
+    PART_FILES=$(ls "${BASE_NAME}".part-* 2>/dev/null | sort -V)
     
     if [ -z "$PART_FILES" ]; then
         echo "Error: No part files found for $BASE_NAME."

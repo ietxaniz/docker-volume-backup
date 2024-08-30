@@ -2,9 +2,7 @@ package s3
 
 import (
 	"fmt"
-	"io"
 	"log"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -95,14 +93,14 @@ func UploadFolderToS3(localFolder, s3Folder string, cfg config.Config) error {
 				splitS3Path = strings.ReplaceAll(splitS3Path, "\\", "/")
 
 				fmt.Printf("Uploading split file %s to s3://%s/%s\n", splitFile, cfg.S3.Bucket, splitS3Path)
-				err = UploadToS3(splitFile, splitS3Path, cfg.S3)
+				err = UploadToS3(splitFile, splitS3Path, cfg)
 				if err != nil {
 					return fmt.Errorf("failed to upload split file %s: %w", splitFile, err)
 				}
 			}
 		} else {
 			fmt.Printf("Uploading %s to s3://%s/%s\n", path, cfg.S3.Bucket, s3Path)
-			err = UploadToS3(path, s3Path, cfg.S3)
+			err = UploadToS3(path, s3Path, cfg)
 			if err != nil {
 				return fmt.Errorf("failed to upload file %s: %w", path, err)
 			}
@@ -138,13 +136,13 @@ func splitFile(filePath string, cfg config.Config) ([]string, error) {
 	return splitFiles, nil
 }
 
-func UploadToS3(localPath, remotePath string, cfg config.S3Config) error {
+func UploadToS3(localPath, remotePath string, cfg config.Config) error {
 	log.Printf("Starting upload of %s to S3 path %s", localPath, remotePath)
 
 	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(cfg.Region),
-		Endpoint:    aws.String(cfg.Endpoint),
-		Credentials: credentials.NewStaticCredentials(cfg.AccessKeyID, cfg.AccessKeySecret, ""),
+		Region:      aws.String(cfg.S3.Region),
+		Endpoint:    aws.String(cfg.S3.Endpoint),
+		Credentials: credentials.NewStaticCredentials(cfg.S3.AccessKeyID, cfg.S3.AccessKeySecret, ""),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
@@ -161,14 +159,14 @@ func UploadToS3(localPath, remotePath string, cfg config.S3Config) error {
 		return fmt.Errorf("failed to get file info: %w", err)
 	}
 
-	maxSize := parseSize(cfg.MaxFileSize)
+	maxSize := parseSize(cfg.S3.MaxFileSize)
 	if fileInfo.Size() > maxSize {
 		return uploadLargeFile(sess, localPath, remotePath, cfg, maxSize)
 	}
 
 	uploader := s3manager.NewUploader(sess)
 	_, err = uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(cfg.Bucket),
+		Bucket: aws.String(cfg.S3.Bucket),
 		Key:    aws.String(remotePath),
 		Body:   file,
 	})
@@ -177,74 +175,6 @@ func UploadToS3(localPath, remotePath string, cfg config.S3Config) error {
 	}
 
 	log.Printf("Successfully uploaded %s to S3", localPath)
-	return nil
-}
-
-func uploadLargeFile(sess *session.Session, localPath, remotePath string, cfg config.S3Config, maxSize int64) error {
-	file, err := os.Open(localPath)
-	if err != nil {
-		return fmt.Errorf("failed to open file %s: %w", localPath, err)
-	}
-	defer file.Close()
-
-	fileInfo, _ := file.Stat()
-	totalSize := fileInfo.Size()
-	totalParts := int(math.Ceil(float64(totalSize) / float64(maxSize)))
-
-	log.Printf("File %s exceeds max size. Splitting into %d parts", localPath, totalParts)
-
-	// Create a subfolder for split files
-	fileName := filepath.Base(localPath)
-	subfolderPath := filepath.Join(filepath.Dir(remotePath), strings.TrimSuffix(fileName, filepath.Ext(fileName)))
-	
-	uploader := s3manager.NewUploader(sess)
-	
-	splitFiles := []string{}
-
-	for i := 0; i < totalParts; i++ {
-		partSize := int64(math.Min(float64(maxSize), float64(totalSize-int64(i)*maxSize)))
-		partBuffer := make([]byte, partSize)
-		
-		_, err := file.Read(partBuffer)
-		if err != nil && err != io.EOF {
-			return fmt.Errorf("failed to read file part: %w", err)
-		}
-
-		partNumber := i + 1
-		splitFileName := fmt.Sprintf("%s.part%d", fileName, partNumber)
-		splitFilePath := filepath.Join(filepath.Dir(localPath), splitFileName)
-		
-		err = os.WriteFile(splitFilePath, partBuffer, 0644)
-		if err != nil {
-			return fmt.Errorf("failed to write split file: %w", err)
-		}
-		
-		splitFiles = append(splitFiles, splitFilePath)
-
-		partRemotePath := filepath.Join(subfolderPath, splitFileName)
-		
-		log.Printf("Uploading part %d/%d of %s", partNumber, totalParts, fileName)
-		
-		_, err = uploader.Upload(&s3manager.UploadInput{
-			Bucket: aws.String(cfg.Bucket),
-			Key:    aws.String(partRemotePath),
-			Body:   strings.NewReader(string(partBuffer)),
-		})
-		if err != nil {
-			return fmt.Errorf("failed to upload file part to S3: %w", err)
-		}
-	}
-
-	log.Printf("Successfully uploaded all %d parts of %s", totalParts, fileName)
-
-	// Clean up split files
-	for _, splitFile := range splitFiles {
-		err := os.Remove(splitFile)
-		if err != nil {
-			log.Printf("Warning: failed to remove split file %s: %v", splitFile, err)
-		}
-	}
-
 	return nil
 }
 

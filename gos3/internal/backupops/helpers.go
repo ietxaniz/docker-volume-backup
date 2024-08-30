@@ -92,8 +92,8 @@ func isVolumePath(volumeName string) bool {
 	return filepath.IsAbs(volumeName)
 }
 
-func changeBackupPermissions(backupFilePath string, cfg config.Config) error {
-    cmd := exec.Command("docker", "run", "--rm", "-v", fmt.Sprintf("%s:/backup", filepath.Dir(backupFilePath)),
-        "alpine", "chown", "-R", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), "/backup")
-    return cmd.Run()
+func changeBackupPermissions(backupFilePath string) error {
+	cmd := exec.Command("docker", "run", "--rm", "-v", fmt.Sprintf("%s:/backup", filepath.Dir(backupFilePath)),
+		"alpine", "chown", "-R", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), "/backup")
+	return cmd.Run()
 }
