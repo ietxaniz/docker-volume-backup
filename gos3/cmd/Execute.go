@@ -39,7 +39,6 @@ func init() {
 	rootCmd.AddCommand(s3UploadCmd)
 	rootCmd.AddCommand(manualBackupCmd)
 	rootCmd.AddCommand(downloadCmd)
-	rootCmd.AddCommand(testJoinDecryptCmd)
 
 	volumebackupCmd.Flags().BoolP("no-compression", "n", false, "Create backup without compression")
 
