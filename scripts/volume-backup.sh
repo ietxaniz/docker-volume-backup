@@ -45,7 +45,6 @@ fi
 
 end_time=$(date +%s.%N)
 elapsed=$(echo "$end_time - $start_time" | bc)
-elapsed=$(printf "%.6f" $elapsed)
 
 echo "Backup of volume $VOLUME_NAME created as $BACKUP_FILE"
 echo "Original size: $orig_size bytes"

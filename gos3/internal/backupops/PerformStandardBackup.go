@@ -32,13 +32,18 @@ func PerformStandardBackup(def config.BackupDefinition, cfg config.Config) error
 		backupFilePath := filepath.Join(cfg.App.LocalBackupFolder, backupFileName)
 		log.Printf("Creating backup for volume: %s", volumeName)
 
-		_, err = script.VolumeBackup(volumeName, backupFilePath, true, cfg)
+		result, err := script.VolumeBackup(volumeName, backupFilePath, true, cfg)
 		if err != nil {
 			volumeCreationErrors = err.Error()
 			log.Printf("Backup failed for volume: %s, %s", volumeName, err.Error())
 			break
 		}
 		log.Printf("Backup created successfully for volume: %s", volumeName)
+		log.Printf("Backup details for %s:", volumeName)
+		log.Printf("  Original size: %d bytes", result.OriginalSize)
+		log.Printf("  Final size: %d bytes", result.FinalSize)
+		log.Printf("  Compression ratio: %.2f", result.CompressionRatio)
+		log.Printf("  Time elapsed: %.6f seconds", result.TimeElapsed)
 
 		err = changeBackupPermissions(backupFilePath)
 		if err != nil {
@@ -67,10 +72,7 @@ func PerformStandardBackup(def config.BackupDefinition, cfg config.Config) error
 		return fmt.Errorf("failed to split backup files: %w", err)
 	}
 
-	s3Subfolder := s3.GenerateSubfolderName(cfg.App.BackupFrequency)
-	s3Path := filepath.Join(cfg.S3.BackupFolder, s3Subfolder)
-
-	err = s3.UploadFolderToS3(cfg.App.LocalBackupFolder, s3Path, cfg)
+	err = s3.UploadFolderToS3(cfg.App.LocalBackupFolder, cfg.S3.BackupFolder, cfg)
 	if err != nil {
 		return fmt.Errorf("failed to upload backup to S3: %w", err)
 	}
