@@ -11,6 +11,7 @@ import (
 func KeyGenerate(configuration config.Config) error {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "key-generate.sh")
 	cmd := exec.Command(scriptPath)
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -23,7 +24,11 @@ func KeyGenerate(configuration config.Config) error {
 
 func KeyEncrypt(inputFile, outputFile, publicKeyFile string, configuration config.Config) error {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "key-encrypt.sh")
-	cmd := exec.Command(scriptPath, inputFile, outputFile, publicKeyFile)
+	cmd := exec.Command(scriptPath,
+		config.MustGetAbsPathRelativeToAppFolder(inputFile, configuration),
+		config.MustGetAbsPathRelativeToAppFolder(outputFile, configuration),
+		config.MustGetAbsPathRelativeToAppFolder(publicKeyFile, configuration))
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -36,7 +41,11 @@ func KeyEncrypt(inputFile, outputFile, publicKeyFile string, configuration confi
 
 func KeyDecrypt(inputFile, outputFile, privateKeyFile string, configuration config.Config) error {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "key-decrypt.sh")
-	cmd := exec.Command(scriptPath, inputFile, outputFile, privateKeyFile)
+	cmd := exec.Command(scriptPath,
+		config.MustGetAbsPathRelativeToAppFolder(inputFile, configuration),
+		config.MustGetAbsPathRelativeToAppFolder(outputFile, configuration),
+		config.MustGetAbsPathRelativeToAppFolder(privateKeyFile, configuration))
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

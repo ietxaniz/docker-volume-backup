@@ -10,7 +10,10 @@ import (
 
 func FileDecrypt(inputFile, outputFile string, password string, configuration config.Config) error {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "file-decrypt.sh")
-	cmd := exec.Command(scriptPath, inputFile, outputFile)
+	cmd := exec.Command(scriptPath,
+		config.MustGetAbsPathRelativeToAppFolder(inputFile, configuration),
+		config.MustGetAbsPathRelativeToAppFolder(outputFile, configuration))
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {

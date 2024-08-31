@@ -51,6 +51,7 @@ func DeriveKey(password string, salt string, iterations int, configuration confi
 	}
 
 	cmd := exec.Command(scriptPath, args...)
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

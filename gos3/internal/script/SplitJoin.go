@@ -10,7 +10,10 @@ import (
 
 func Split(folderPath, splitSize string, configuration config.Config) error {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "split.sh")
-	cmd := exec.Command(scriptPath, folderPath, splitSize)
+	cmd := exec.Command(scriptPath,
+		config.MustGetAbsPathRelativeToAppFolder(folderPath, configuration),
+		splitSize)
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -23,7 +26,8 @@ func Split(folderPath, splitSize string, configuration config.Config) error {
 
 func Join(folderPath string, configuration config.Config) error {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "join.sh")
-	cmd := exec.Command(scriptPath, folderPath)
+	cmd := exec.Command(scriptPath, config.MustGetAbsPathRelativeToAppFolder(folderPath, configuration))
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

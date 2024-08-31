@@ -11,7 +11,12 @@ import (
 
 func KeyDecrypt2WithPass(inputFile, outputFile, encryptedPrivateKeyFile, privateKeyPassword string, configuration config.Config) error {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "key-decrypt2-withpass.sh")
-	cmd := exec.Command(scriptPath, inputFile, outputFile, encryptedPrivateKeyFile, privateKeyPassword)
+	cmd := exec.Command(scriptPath,
+		config.MustGetAbsPathRelativeToAppFolder(inputFile, configuration),
+		config.MustGetAbsPathRelativeToAppFolder(outputFile, configuration),
+		config.MustGetAbsPathRelativeToAppFolder(encryptedPrivateKeyFile, configuration),
+		privateKeyPassword)
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

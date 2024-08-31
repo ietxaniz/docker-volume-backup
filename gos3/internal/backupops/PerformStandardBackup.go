@@ -11,7 +11,7 @@ import (
 )
 
 func PerformStandardBackup(def config.BackupDefinition, cfg config.Config) error {
-	log.Printf("Starting backup process for: %s", def.Name)
+	log.Printf("Starting standard backup process for: %s", def.Name)
 
 	err := cleanLocalBackupFolder(cfg.App.LocalBackupFolder)
 	if err != nil {

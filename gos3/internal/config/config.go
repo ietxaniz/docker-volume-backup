@@ -84,11 +84,6 @@ func LoadConfiguration(configFileName string) (Config, error) {
 		AppStartFolder: appStartFolder,
 	}
 
-	config.S3.BackupFolder, err = getAbsPath(config.S3.BackupFolder, appStartFolder)
-	if err != nil {
-		return config, fmt.Errorf("failed to get absolute path for S3 backup folder: %w", err)
-	}
-
 	config.App.ScriptsFolder, err = getAbsPath(config.App.ScriptsFolder, appStartFolder)
 	if err != nil {
 		return config, fmt.Errorf("failed to get absolute path for scripts folder: %w", err)

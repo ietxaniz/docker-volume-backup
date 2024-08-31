@@ -12,7 +12,8 @@ import (
 func VolumeRestore(volumeName, backupFileName string, configuration config.Config) error {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "volume-restore.sh")
 
-	cmd := exec.Command(scriptPath, volumeName, backupFileName)
+	cmd := exec.Command(scriptPath, volumeName, config.MustGetAbsPathRelativeToAppFolder(backupFileName, configuration))
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

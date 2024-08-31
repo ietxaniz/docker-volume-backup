@@ -10,3 +10,11 @@ func GetAbsPathRelativeToAppFolder(originalPath string, cfg Config) (string, err
 	absPath := filepath.Join(cfg.AppFolders.AppStartFolder, originalPath)
 	return filepath.Abs(absPath)
 }
+
+func MustGetAbsPathRelativeToAppFolder(originalPath string, cfg Config) string {
+	value, err := GetAbsPathRelativeToAppFolder(originalPath, cfg)
+	if err != nil {
+		panic(err)
+	}
+	return value
+}

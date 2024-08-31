@@ -21,12 +21,13 @@ type VolumeBackupResult struct {
 func VolumeBackup(volumeName, backupFileName string, compress bool, configuration config.Config) (*VolumeBackupResult, error) {
 	scriptPath := filepath.Join(configuration.App.ScriptsFolder, "volume-backup.sh")
 
-	args := []string{volumeName, backupFileName}
+	args := []string{volumeName, config.MustGetAbsPathRelativeToAppFolder(backupFileName, configuration)}
 	if !compress {
 		args = append(args, "--no-compression")
 	}
 
 	cmd := exec.Command(scriptPath, args...)
+	cmd.Dir = configuration.AppFolders.ScriptsFolder
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
