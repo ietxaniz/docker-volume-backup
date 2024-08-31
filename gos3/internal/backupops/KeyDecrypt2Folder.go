@@ -11,7 +11,7 @@ import (
 	"golang.org/x/term"
 )
 
-func KeyDecrypt2Folder(inputFolder, outputFolder, encryptedPrivateKeyFile string, configuration config.Config) error {
+func KeyDecrypt2Folder(workingFolder, encryptedPrivateKeyFile string, configuration config.Config) error {
 	// Prompt for private key password
 	fmt.Print("Enter private key decryption password: ")
 	passwordBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
@@ -22,7 +22,7 @@ func KeyDecrypt2Folder(inputFolder, outputFolder, encryptedPrivateKeyFile string
 	fmt.Println() // Print a newline after password input
 
 	// Get list of encrypted files
-	encryptedFiles, err := listEncryptedFiles(inputFolder)
+	encryptedFiles, err := listEncryptedFiles(workingFolder)
 	if err != nil {
 		return fmt.Errorf("failed to list encrypted files: %w", err)
 	}
@@ -31,7 +31,7 @@ func KeyDecrypt2Folder(inputFolder, outputFolder, encryptedPrivateKeyFile string
 	for i, encryptedFile := range encryptedFiles {
 		fmt.Printf("Decrypting file %d of %d: %s\n", i+1, len(encryptedFiles), encryptedFile)
 
-		outputFile := filepath.Join(outputFolder, strings.TrimSuffix(filepath.Base(encryptedFile), ".cpt"))
+		outputFile := filepath.Join(workingFolder, strings.TrimSuffix(filepath.Base(encryptedFile), ".cpt"))
 		err := script.KeyDecrypt2WithPass(encryptedFile, outputFile, encryptedPrivateKeyFile, privateKeyPassword, configuration)
 		if err != nil {
 			return fmt.Errorf("failed to decrypt %s: %w", encryptedFile, err)
