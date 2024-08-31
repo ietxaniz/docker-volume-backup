@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"gos3/internal/config"
-	"log"
+	"gos3/internal/script"
 	"os"
 	"sort"
 	"strconv"
@@ -80,8 +80,17 @@ func DownloadBackup(cfg config.Config) error {
 		return err
 	}
 	for _, backupItem := range backupItems {
-		log.Printf("should download %v", backupItem)
+		err = DownloadBackupItem(backupItem, cfg)
+		if err != nil {
+			return err
+		}
 	}
+
+	err = script.Join(cfg.App.LocalBackupFolder, cfg)
+	if err != nil {
+		return fmt.Errorf("failed to join split files: %w", err)
+	}
+
 	return nil
 }
 

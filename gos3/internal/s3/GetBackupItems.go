@@ -3,10 +3,14 @@ package s3
 import (
 	"fmt"
 	"gos3/internal/config"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type BackupItem struct {
@@ -14,6 +18,7 @@ type BackupItem struct {
 	DataItem     string
 	PassItem     string
 	IsDataFolder bool
+	S3BaseFolder string
 }
 
 func GetBackupItems(cfg config.Config, date BackupDate) ([]BackupItem, error) {
@@ -56,11 +61,29 @@ func GetBackupItems(cfg config.Config, date BackupDate) ([]BackupItem, error) {
 
 }
 
-func DonwloadBackupItem(item BackupItem, cfg config.Config) {
-	// TODO: If it is folder download all the files in the folder and if it is file download the file. Both using DataItem string as full path
-	// TODO: Download also PassItem as full path
-	// TODO: If it is a folder call to script.Join
-	// All items should be downloaded to localBackupFolder
+func DownloadBackupItem(item BackupItem, cfg config.Config) error {
+	sess, err := createS3Session(cfg.S3)
+	if err != nil {
+		return fmt.Errorf("failed to create S3 session: %w", err)
+	}
+
+	downloader := s3manager.NewDownloader(sess)
+
+	if item.IsDataFolder {
+		err = downloadFolder(sess, downloader, item.S3BaseFolder, item.DataItem, cfg)
+	} else {
+		err = downloadFile(downloader, cfg.S3.Bucket, item.S3BaseFolder, item.DataItem, cfg)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to download data item: %w", err)
+	}
+
+	err = downloadFile(downloader, cfg.S3.Bucket, item.S3BaseFolder, item.PassItem, cfg)
+	if err != nil {
+		return fmt.Errorf("failed to download pass item: %w", err)
+	}
+
+	return nil
 }
 
 func getBackupItemsFromFolderAndFiles(parentFolder string, folderItems []string, fileItems []string) []BackupItem {
@@ -90,6 +113,7 @@ func getBackupItemsFromFolderAndFiles(parentFolder string, folderItems []string,
 				DataItem:     dataName,
 				PassItem:     passName,
 				IsDataFolder: true,
+				S3BaseFolder: parentFolder,
 			})
 		}
 	}
@@ -119,9 +143,57 @@ func getBackupItemsFromFolderAndFiles(parentFolder string, folderItems []string,
 					DataItem:     dataName,
 					PassItem:     passName,
 					IsDataFolder: true,
+					S3BaseFolder: parentFolder,
 				})
 			}
 		}
 	}
 	return items
+}
+
+func downloadFolder(sess *session.Session, downloader *s3manager.Downloader, baseFolder string, folderPath string, cfg config.Config) error {
+	svc := s3.New(sess)
+
+	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(cfg.S3.Bucket),
+		Prefix: aws.String(folderPath),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to list objects in folder: %w", err)
+	}
+
+	for _, item := range resp.Contents {
+		err := downloadFile(downloader, cfg.S3.Bucket, baseFolder, *item.Key, cfg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func downloadFile(downloader *s3manager.Downloader, bucket, baseFolder, filePath string, cfg config.Config) error {
+	localPath := filepath.Join(cfg.App.LocalBackupFolder, strings.TrimPrefix(filePath, baseFolder))
+
+	err := os.MkdirAll(filepath.Dir(localPath), 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	file, err := os.Create(localPath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	_, err = downloader.Download(file, &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(filePath),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to download file: %w", err)
+	}
+
+	fmt.Printf("Downloaded: %s\n", localPath)
+	return nil
 }
